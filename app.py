@@ -21,15 +21,15 @@ with urlopen('https://raw.githubusercontent.com/plotly/datasets/master/geojson-c
 	
 	
 
-df = pd.read_csv(
-    'https://gist.githubusercontent.com/chriddyp/' +
-    "5d1ea79569ed194d432e56108a04d188/raw/" +
-    'a9f9e8076b837d541398e999dcbac2b2826a81f8/'+
-    'gdp-life-exp-2007.csv')
+# df = pd.read_csv(
+#     'https://gist.githubusercontent.com/chriddyp/' +
+#     "5d1ea79569ed194d432e56108a04d188/raw/" +
+#     'a9f9e8076b837d541398e999dcbac2b2826a81f8/'+
+#     'gdp-life-exp-2007.csv')
 
 #df_1 = pd.read_csv("https://raw.githubusercontent.com/plotly/datasets/master/fips-unemp-16.csv", dtype={"fips": str})
 
-df_2 = pd.read_csv('NewData/county_data/total_census_county_grouped.csv', dtype = {"FIPS":str})
+df_2 = pd.read_csv('data/total_census_county_grouped.csv', dtype = {"FIPS":str})
 
 df_2['FIPS'] = df_2['FIPS'].apply(lambda x: x.zfill(5))
 
@@ -37,16 +37,16 @@ df_2['STCOUNTYFP'] = df_2['STCOUNTYFP'].astype(str).apply(lambda x: x.zfill(5))
 
 
 
-df_education =pd.read_csv('census_county_data_education.csv')
+df_education =pd.read_csv('data/census_county_data_education.csv')
 
 
 test_data_education = df_education[df_education['COUNTYNAME'] == 'Dane County']
 
-census_occ = pd.read_csv('census_data_occ.csv')
+census_occ = pd.read_csv('data/census_data_occ.csv')
 
 test_data_occ = census_occ[census_occ['COUNTYNAME'] == 'Abbeville County']
 
-census_nat = pd.read_csv('census_nat.csv')
+census_nat = pd.read_csv('data/census_nat.csv')
 
 test_data_nat =  census_nat[census_nat['COUNTYNAME'] == 'Hennepin County']
 
