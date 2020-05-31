@@ -17,7 +17,7 @@ Create a virtual environment within the main folder:
 
 Activate the environment:
 
-`source .env/bin/activate`
+`source .venv/bin/activate`
 
 
 Install the required packages:
