@@ -27,3 +27,5 @@ Install the required packages:
 Run the App!
 
 `python app.py`
+
+![Alt text](demo.png?raw=true "Optional Title")
