@@ -1,4 +1,6 @@
 import dash
+import os
+import pathlib
 import dash_core_components as dcc
 import dash_html_components as html
 import dash_bootstrap_components as dbc
@@ -9,25 +11,33 @@ from urllib.request import urlopen
 from dash.dependencies import State, Input, Output
 from dash.exceptions import PreventUpdate
 import numpy as np
+import json
+
+#need to import this stuff to somehow
+
+
 
 stylesheets = ['bootstrap.min.css']
 
-token = 'pk.eyJ1IjoiemVtbTE2IiwiYSI6ImNrNGhwM2JtMzFjYngzbnFkcXBmM2xjbDYifQ.u4Ld1s5PrOKdrbvBK0r9rg'
+external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css', dbc.themes.MINTY]
+
+app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
+
+server = app.server
+
+PATH = pathlib.Path(__file__).parent
+DATA_PATH = PATH.joinpath("data").resolve()
+
+#token = 'pk.eyJ1IjoiemVtbTE2IiwiYSI6ImNrNGhwM2JtMzFjYngzbnFkcXBmM2xjbDYifQ.u4Ld1s5PrOKdrbvBK0r9rg'
+token = os.getenv('TOKEN')
 
 
-import json
 with urlopen('https://raw.githubusercontent.com/plotly/datasets/master/geojson-counties-fips.json') as response:
     counties = json.load(response)
 	
 	
 
-# df = pd.read_csv(
-#     'https://gist.githubusercontent.com/chriddyp/' +
-#     "5d1ea79569ed194d432e56108a04d188/raw/" +
-#     'a9f9e8076b837d541398e999dcbac2b2826a81f8/'+
-#     'gdp-life-exp-2007.csv')
-
-#df_1 = pd.read_csv("https://raw.githubusercontent.com/plotly/datasets/master/fips-unemp-16.csv", dtype={"fips": str})
+#read in data
 
 df_2 = pd.read_csv('data/total_census_county_grouped.csv', dtype = {"FIPS":str})
 
@@ -37,7 +47,7 @@ df_2['STCOUNTYFP'] = df_2['STCOUNTYFP'].astype(str).apply(lambda x: x.zfill(5))
 
 
 
-df_education =pd.read_csv('data/census_county_data_education.csv')
+df_education = pd.read_csv('data/census_county_data_education.csv')
 
 
 test_data_education = df_education[df_education['COUNTYNAME'] == 'Dane County']
@@ -50,9 +60,9 @@ census_nat = pd.read_csv('data/census_nat.csv')
 
 test_data_nat =  census_nat[census_nat['COUNTYNAME'] == 'Hennepin County']
 
-external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css', dbc.themes.MINTY]
 
-app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
+
+
 
 #df = pd.read_csv('census_data.csv')
 
