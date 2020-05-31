@@ -28,4 +28,6 @@ Run the App!
 
 `python app.py`
 
+Make sure that you get a token from Mapbox and put it in your .env file.
+
 ![Alt text](demo.png?raw=true "Optional Title")
