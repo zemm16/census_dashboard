@@ -12,7 +12,7 @@ To run this app first clone repository and then open a terminal to main folder:
  
 Create a virtual environment within the main folder:
 
-`python3 -m venv .env`
+`python3 -m venv .venv`
 
 
 Activate the environment:
