@@ -13,8 +13,6 @@ from dash.exceptions import PreventUpdate
 import numpy as np
 import json
 
-#need to import this stuff to somehow
-
 
 
 stylesheets = ['bootstrap.min.css']
@@ -25,62 +23,37 @@ app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
 server = app.server
 
+# get relative data folder
 PATH = pathlib.Path(__file__).parent
 DATA_PATH = PATH.joinpath("data").resolve()
 
-#token = 'pk.eyJ1IjoiemVtbTE2IiwiYSI6ImNrNGhwM2JtMzFjYngzbnFkcXBmM2xjbDYifQ.u4Ld1s5PrOKdrbvBK0r9rg'
+
 token = os.getenv('TOKEN')
 
+#load data
 
 with urlopen('https://raw.githubusercontent.com/plotly/datasets/master/geojson-counties-fips.json') as response:
     counties = json.load(response)
 	
 	
 
-#read in data
 
-df_2 = pd.read_csv('data/total_census_county_grouped.csv', dtype = {"FIPS":str})
+total_census_grouped = pd.read_csv(DATA_PATH.joinpath('total_census_county_grouped.csv'),dtype = {'FIPS':str})
 
-df_2['FIPS'] = df_2['FIPS'].apply(lambda x: x.zfill(5))
+total_census_grouped['FIPS'] = total_census_grouped['FIPS'].apply(lambda x: x.zfill(5))
 
-df_2['STCOUNTYFP'] = df_2['STCOUNTYFP'].astype(str).apply(lambda x: x.zfill(5))
+total_census_grouped['STCOUNTYFP'] = total_census_grouped['STCOUNTYFP'].astype(str).apply(lambda x: x.zfill(5))
 
+census_education = pd.read_csv(DATA_PATH.joinpath('census_county_data_education.csv'))
 
+census_occ = pd.read_csv(DATA_PATH.joinpath('census_data_occ.csv'))
 
-df_education = pd.read_csv('data/census_county_data_education.csv')
-
-
-test_data_education = df_education[df_education['COUNTYNAME'] == 'Dane County']
-
-census_occ = pd.read_csv('data/census_data_occ.csv')
-
-test_data_occ = census_occ[census_occ['COUNTYNAME'] == 'Abbeville County']
-
-census_nat = pd.read_csv('data/census_nat.csv')
-
-test_data_nat =  census_nat[census_nat['COUNTYNAME'] == 'Hennepin County']
-
-
-
-
-
-#df = pd.read_csv('census_data.csv')
-
-#data = df_to_geojson(df, properties = ['median_income_individ'])
-
-
-#first_card = dbc.Card(
-#    dbc.CardBody(
-#        [
-#            html.H5("Card title", className="card-title"),
-#            html.P("This card has some text content, but not much else"),
-#            dbc.Button("Go somewhere", color="primary"),
-#        ]
-#    )
-#)
+census_nat = pd.read_csv(DATA_PATH.joinpath('census_nat.csv'))
 
 
 def update_scatter_axis(dd_select):
+	"""What the axis will show given each metric"""
+
 	if dd_select == "UNEMPL_RATE":
 		return "Unemployment Rate (%) "
 	
@@ -173,8 +146,9 @@ def update_scatter_axis(dd_select):
 	
 	
 
-dropdown1 = dcc.Dropdown(
-		id = "dropdown1",
+dropdown_map = dcc.Dropdown(
+
+		id = "dropdown_map",
 		options = [
 			{"label": "Unemployment Rate", "value":"UNEMPL_RATE"},
 			{"label": "Poverty Rate", "value":"POVERTY_RATE"},
@@ -219,8 +193,9 @@ dropdown1 = dcc.Dropdown(
 		value = "UNEMPL_RATE"
 )
 
-dropdown2 = dcc.Dropdown(
-		id = "dropdown2",
+dropdown_scatterx = dcc.Dropdown(
+
+		id = "dropdown_scatterx",
 				options = [
 			{"label": "Unemployment Rate", "value":"UNEMPL_RATE"},
 			{"label": "Poverty Rate", "value":"POVERTY_RATE"},
@@ -257,30 +232,15 @@ dropdown2 = dcc.Dropdown(
 			{"label": "Median Rent", "value":'MEDIAN_RENT'},
 			{"label": "Median Household Income", "value":'MEDIAN_INCOME_DOLLARS'},
 		
-		
-
-
-			
+					
 		],
 		value = "POVERTY_RATE"
 )
 
-#dropdown2 = dcc.Dropdown(
-#		id = "dropdown2",
-#		options = [
-#			{"label": "Public Transit", "value":"PUBLIC_TRANSIT"},
-#			{"label": "Walked", "value":"WALKED"}
-#		], 
-#		value = "MEDIAN_RENT"
-#)
-
-
-tenth_card = dbc.Card(dbc.CardBody([
-	dbc.Row([dbc.Col([dbc.Row([dbc.Col([html.H4("Select a Field to Show in Map and on Y axis of Scatterplot") ])]),dropdown1],width = 6), dbc.Col([dbc.Row([dbc.Col([html.H4("Select a Field to show on X axis of Scatter Plot") ])]),dropdown2],width = 6)])
-]
-))
 
 def update_tooltip(dd_select, value):
+	"""Tooltip formatting for map and scatter"""
+
 	if dd_select == "UNEMPL_RATE":
 		return  "<b>%{text}</b><br>Unemployment Rate: %{" + value + ":.0f}%"
 	
@@ -374,59 +334,48 @@ def update_tooltip(dd_select, value):
 
 
 def generate_choro(dd_select,value = None):
-	"""
-    :param dd_select: dropdown select value.
-    :param start: start date from date-picker.
-    :param end: end date from date-picker.
-    :return: Choropleth map displaying average delay time.
-    """
-	#selected_points = df_2[df_2['COUNTYNAME'] == value].index,
-	#selected_points = [[733]]
-	#print("selected points: " + str(selected_points))
-	test = update_tooltip(dd_select, 'z')
+	"""Map showing particular metric from 2018 Census"""
+
+	tooltip_choro = update_tooltip(dd_select, 'z')
 	
 	if value is not None:
 	
-		center_long = df_2.iloc[value[0], -3]
-		print(df_2.iloc[value[0], -3])
-		print("center_long:" + str(center_long))
-		center_lat = df_2.iloc[value[0], -4]
-		print(center_lat)
-		county_data = [
+		center_long = total_census_grouped.iloc[value[0], -3]
+		
+		center_lat = total_census_grouped.iloc[value[0], -4]
+	
+		map_data = [
+
 		go.Choroplethmapbox(
 				   name = "",
 				   geojson = counties,
 				   showscale = True,
-				   locations = df_2['FIPS'].values,
-				   z = df_2[dd_select].values,
+				   locations = total_census_grouped['FIPS'].values,
+				   z = total_census_grouped[dd_select].values,
 				   marker_opacity=0.5,
-				   text=df_2['Geographic Area Name'],
+				   text=total_census_grouped['Geographic Area Name'],
 				   colorscale='deep',
-			   	 hovertemplate = test,
+			   	   hovertemplate = tooltip_choro,
 				   selectedpoints =value,
-			 selected = {
+			 	   selected = {
 						'marker' :  { 'opacity': 1},
-						#'marker': {'color': '#85144b'}
+						
 
 				},
-			unselected = {
+				unselected = {
 
 				'marker': {'opacity': .3}
 			},
 				#reversescale=True,
 			   marker=dict(line={"color": "rgb(255,255,255)"}),
-				customdata=df_2[dd_select].values,
+				customdata=total_census_grouped[dd_select].values
 
-				   #color = 'rgba(163,22,19,0.8)
+			
 
 	)
 		]
 
-	#	title = (
-	#		"Average Departure Delay <b>(Minutes)</b> <br> By Original State"
-	#		if dd_select == "WALKED"
-	#		else "Average Arrival Delay <b>(Minutes)</b> <br> By Destination State"
-	#	)
+
 
 		layout = dict(
 	#		title=dict(
@@ -477,28 +426,28 @@ def generate_choro(dd_select,value = None):
 				)
 		)
 
-		return {"data": county_data, "layout": layout}
+		return {"data": map_data, "layout": layout}
 	
 	else:
-		center_long = df_2.iloc[713, -3]
-		print("center_long:" + str(center_long))
-		center_lat = df_2.iloc[713, -4]
-		print(center_lat)
-		county_data = [
+		center_long = total_census_grouped.iloc[713, -3]
+	
+		center_lat = total_census_grouped.iloc[713, -4]
+		
+		map_data = [
 		go.Choroplethmapbox(
 				   name = "",	
 				   geojson = counties,
 				   showscale = True,
-				   locations = df_2['FIPS'].values,
-				   z = df_2[dd_select].values,
+				   locations = total_census_grouped['FIPS'].values,
+				   z = total_census_grouped[dd_select].values,
 				   marker_opacity=0.5,
-				   text=df_2['Geographic Area Name'],
-				   hovertemplate = test,
+				   text=total_census_grouped['Geographic Area Name'],
+				   hovertemplate = tooltip_choro,
 				   colorscale='deep',
 
 				#reversescale=True,
 			   marker=dict(line={"color": "rgb(255,255,255)"}),
-				customdata=df_2[dd_select].values,
+				customdata=total_census_grouped[dd_select].values,
 
 				   #color = 'rgba(163,22,19,0.8)
 
@@ -552,23 +501,23 @@ def generate_choro(dd_select,value = None):
 				)
 		)
 
-		return {"data": county_data, "layout": layout}
+		return {"data": map_data, "layout": layout}
 	
 
 		
 
 def generate_scatter(dd_select_x,dd_select_y, value,):
 	selected_points = [value]
-	test_x = update_tooltip(dd_select_x, 'x')
+	tooltip_x = update_tooltip(dd_select_x, 'x')
 	
-	test_y = update_tooltip(dd_select_y, 'y').replace('<b>%{text}</b><br>', '')
+	tooltip_y = update_tooltip(dd_select_y, 'y').replace('<b>%{text}</b><br>', '')
 	
 	scatter_data = [
 		 go.Scatter(
 			 		name = "",
-                    x=df_2[dd_select_x],
-                    y=df_2[dd_select_y],
-                    text=df_2['Geographic Area Name'],
+                    x=total_census_grouped[dd_select_x],
+                    y=total_census_grouped[dd_select_y],
+                    text=total_census_grouped['Geographic Area Name'],
                     mode='markers',
                     opacity=0.8,
 					hoverlabel = dict(bgcolor = "#CED2CC" ),
@@ -593,7 +542,7 @@ def generate_scatter(dd_select_x,dd_select_y, value,):
             },
 			 
 			  line_width=2,
-			  hovertemplate = test_x + '<br>' + test_y
+			  hovertemplate = tooltip_x + '<br>' + tooltip_y
 			 	
                 ) 
 		
@@ -615,7 +564,7 @@ def generate_scatter(dd_select_x,dd_select_y, value,):
 	
 	return {"data": scatter_data, "layout":layout}
 
-first_card =  dbc.Card(dbc.CardBody([
+map_card =  dbc.Card(dbc.CardBody([
     dbc.Row([dbc.Col([html.H2(html.Strong("How Counties Compare")),html.H4("Click on a county to see more detailed information about that county further down on the dashboard", id = "map-text") ], width = 10)]),
     dcc.Graph(
         
@@ -632,7 +581,7 @@ first_card =  dbc.Card(dbc.CardBody([
 )]), color="light")
 
 
-second_card = dbc.Card(dbc.CardBody([
+scatter_card = dbc.Card(dbc.CardBody([
         dbc.Row([dbc.Col([html.H2(html.Strong("Comparing Census Fields")),html.H4("Select a point to see where the county is on the map on the left") ])]),
  dcc.Graph(
         id='scatter',
@@ -641,14 +590,14 @@ second_card = dbc.Card(dbc.CardBody([
 ])
 , color = "light")
 
-def generate_box1(value):
+def generate_rentbox(value):
 	if value == None:
 		selected_points = []
 	selected_points = [value]
 	box_data = [
 		go.Box(
-			y = df_2["MEDIAN_RENT"],
-			text=df_2['COUNTYNAME'], 
+			y = total_census_grouped["MEDIAN_RENT"],
+			text=total_census_grouped['COUNTYNAME'], 
 			boxpoints = 'all',
 			jitter = 0,	
 			marker = dict(color = "#1F3F49"),
@@ -694,30 +643,15 @@ def generate_box1(value):
 	
 	return {"data": box_data, "layout":layout}
 
-third_card = dbc.Card(dbc.CardBody([
-       
-		dbc.Row([dbc.Col(html.Span([html.H4('Median Rent for:  '), html.H3(html.B('Dane County', style = {"font-size":"18px"}, id = "county_text1"))]), style = {"text-align":"center"})]),
-		dbc.Row([dbc.Col(html.H1("", id = "rent_text", style = {"text-align":"center"}))]),
-		
-		
-		dcc.Graph(
-        id='box1',
-        figure= generate_box1(value = 713 )
-    )
-		
-		
-		
-		
-])
-, color = "light")
 
-def generate_box2(value):
+
+def generate_householdvalue_box(value):
 	
 	selected_points = [value]
 	box_data = [
 		go.Box(
-			y = df_2["MEDIAN_HOUSEHOLD_VALUE"],
-			text=df_2['COUNTYNAME'], 
+			y = total_census_grouped["MEDIAN_HOUSEHOLD_VALUE"],
+			text=total_census_grouped['COUNTYNAME'], 
 			boxpoints = 'all',
 			jitter = 0,	
 			marker = dict(color = "#1F3F49"),
@@ -761,32 +695,16 @@ def generate_box2(value):
 	
 	return {"data": box_data, "layout":layout}
 
-fourth_card = dbc.Card(dbc.CardBody([
-     	dbc.Row([dbc.Col(html.Span([html.H4('Median House Value:  '), html.H3(html.B('Dane County', style = {"font-size":"18px"}, id = "county_text2"))]), style = {"text-align":"center"})]),
-
-		dbc.Row([dbc.Col(html.H1("", id = "house_price_text", style = {"text-align":"center"}))]),
-		
-		
-		dcc.Graph(
-        id='box2',
-        figure= generate_box2(value = 713 )
-    )
-		
-		
-		
-		
-])
-, color = "light")
 
 
-def generate_box3(value):
+def generate_meantimework_box(value):
 
 	selected_points = [value]
 
 	box_data = [
 		go.Box(
-			y = df_2["MEAN_TIME_TO_WORK_MIN"],
-			text=df_2['COUNTYNAME'], 
+			y = total_census_grouped["MEAN_TIME_TO_WORK_MIN"],
+			text=total_census_grouped['COUNTYNAME'], 
 			boxpoints = 'all',
 			
 			jitter = 0,	
@@ -831,25 +749,10 @@ def generate_box3(value):
 	
 	return {"data": box_data, "layout":layout}
 
-fifth_card = dbc.Card(dbc.CardBody([
-       	dbc.Row([dbc.Col(html.Span([html.H4('Avg. Commute (min):  '), html.H3(html.B('Dane County', style = {"font-size":"18px"}, id = "county_text3"))]), style = {"text-align":"center"})]),
-	
-		dbc.Row([dbc.Col(html.H1("", id = "commute_text", style = {"text-align":"center"}))]),
-		
-		
-		dcc.Graph(
-        id='box3',
-        figure= generate_box3(value = 713)
-    )
-		
-		
-		
-		
-])
-, color = "light")
+
 
 def generate_dist(value):
-	dist_county = df_2.iloc[value]
+	dist_county = total_census_grouped.iloc[value]
 	dist_data = [
 		
 		{			
@@ -982,21 +885,12 @@ def generate_dist(value):
 	
 	return {"data":dist_data, "layout":layout}
 
-sixth_card = dbc.Card(dbc.CardBody([
-        dbc.Row([dbc.Col(html.Span([html.H3('Income Distribution For Dane County', style = {"font-size":"18px"},id = 'inc'), html.H4('Median Household Income: ', )]), style = {"text-align":"center"})]),
-		dbc.Row([dbc.Col(html.H1("", id = "inc_text", style = {"text-align":"center"}))]),
-		
- dcc.Graph(
-        id='distribution',
-        figure = generate_dist(value = 713)
-    )
-]), className = "mb-2"
-, color = "light")	
+
 
 def generate_treemap(value):
-	county = df_2.iloc[value]['COUNTYNAME']
-	state = df_2.iloc[value]['STATE']
-	df_ed_county = df_education[(df_education['COUNTYNAME'] == county) & (df_education['STATE'] == state)]
+	county = total_census_grouped.iloc[value]['COUNTYNAME']
+	state = total_census_grouped.iloc[value]['STATE']
+	df_ed_county = census_education[(census_education['COUNTYNAME'] == county) & (census_education['STATE'] == state)]
 
 	tree_data = [
 		go.Treemap(
@@ -1028,30 +922,16 @@ def generate_treemap(value):
 	   uniformtext = dict( minsize = 10,mode='hide'),margin=dict(pad = 0,t=10, b=10, r=10, l=10)
 	)
 	
-	#print(df_ed_county['EDUCATION_LEVEL'].values)
+
 	
 	return {"data": tree_data, "layout":layout}
 
-seventh_card = dbc.Card(dbc.CardBody([
-        dbc.Row([dbc.Col([html.H2(html.Strong("Educational Makeup of a County")),html.H4("How Educated is Dane County, Wisconsin?", id = "education") ])]), 
-		
-		
-		
-		dcc.Graph(
-        id='treemap',
-        figure=generate_treemap(713))
-    
-		
-		
-		
-		
-])
-, color = "light")	
+
 
 
 def generate_bar(value):
-	county = df_2.iloc[value]['COUNTYNAME']
-	state = df_2.iloc[value]['STATE']
+	county = total_census_grouped.iloc[value]['COUNTYNAME']
+	state = total_census_grouped.iloc[value]['STATE']
 	census_occ_county = census_occ[(census_occ['COUNTYNAME'] == county) & (census_occ['STATE'] == state)]
 	
 	trace0 = go.Bar(
@@ -1204,28 +1084,9 @@ def generate_bar(value):
 
 
 
-eighth_card = dbc.Card(dbc.CardBody([
-        dbc.Row([dbc.Col([html.H2(html.Strong("Comparing Occupations for Dane County, WI"), id = "occup"),html.H4("How many men and women work in each occupation sector?") ])]), 
-		
-		
-		
-		dcc.Graph(
-        id='bar',
-        figure=generate_bar(713 )
-    )
-		
-		
-		
-		
-])
-, color = 'light')
-
-
-
-
 def generate_pie(value):
-	county = df_2.iloc[value]['COUNTYNAME']
-	state = df_2.iloc[value]['STATE']
+	county = total_census_grouped.iloc[value]['COUNTYNAME']
+	state = total_census_grouped.iloc[value]['STATE']
 	pie_data = [
 		go.Pie(
 	name = "",
@@ -1251,31 +1112,109 @@ def generate_pie(value):
 	)
 	return {"data": pie_data, "layout":layout}
 
-#ninth_card = dbc.Card(dbc.CardBody([
-#        dbc.Row([dbc.Col(html.H3("Column2"))]), 
-#		
-#		
-#		
-#		dcc.Graph(
-#        id='life-exp-vs-gdp9',
-#        figure={
-#            "data": [go.Pie(
-#    labels =  ['Native', 'Foreign: Naturalized Citizen', 'Foreign: Not U.S. Citizen'],
-#    values = [test_data_nat['TOTAL_NATIVE'].values[0],
-#       test_data_nat['TOTAL_FOREIGN_BORN_NATURALIZED_CITIZEN'].values[0],
-#       test_data_nat['TOTAL_FOREIGN_BORN_NOT_US_CITIZEN'].values[0]]
-#)]
-#          
-#        }
-#    )
-#		
-#		
-#		
-#		
-#])
-#, color = 'light')
 
-ninth_card = dbc.Card(dbc.CardBody([
+dropdown_card = dbc.Card(dbc.CardBody([
+	dbc.Row([dbc.Col([dbc.Row([dbc.Col([html.H4("Select a Field to Show in Map and on Y axis of Scatterplot") ])]),dropdown_map],width = 6), dbc.Col([dbc.Row([dbc.Col([html.H4("Select a Field to show on X axis of Scatter Plot") ])]),dropdown_scatterx],width = 6)])
+]
+))
+
+rentbox_card = dbc.Card(dbc.CardBody([
+       
+		dbc.Row([dbc.Col(html.Span([html.H4('Median Rent for:  '), html.H3(html.B('Dane County', style = {"font-size":"18px"}, id = "county_text1"))]), style = {"text-align":"center"})]),
+		dbc.Row([dbc.Col(html.H1("", id = "rent_text", style = {"text-align":"center"}))]),
+		
+		
+		dcc.Graph(
+        id='box1',
+        figure= generate_rentbox(value = 713 )
+    )	
+		
+])
+, color = "light")
+
+householdvalue_box_card = dbc.Card(dbc.CardBody([
+     	dbc.Row([dbc.Col(html.Span([html.H4('Median House Value:  '), html.H3(html.B('Dane County', style = {"font-size":"18px"}, id = "county_text2"))]), style = {"text-align":"center"})]),
+
+		dbc.Row([dbc.Col(html.H1("", id = "house_price_text", style = {"text-align":"center"}))]),
+		
+		
+		dcc.Graph(
+        id='box2',
+        figure= generate_householdvalue_box(value = 713 )
+    )
+		
+		
+		
+		
+])
+, color = "light")
+
+meantimeworkbox_card = dbc.Card(dbc.CardBody([
+       	dbc.Row([dbc.Col(html.Span([html.H4('Avg. Commute (min):  '), html.H3(html.B('Dane County', style = {"font-size":"18px"}, id = "county_text3"))]), style = {"text-align":"center"})]),
+	
+		dbc.Row([dbc.Col(html.H1("", id = "commute_text", style = {"text-align":"center"}))]),
+		
+		
+		dcc.Graph(
+        id='box3',
+        figure= generate_meantimework_box(value = 713)
+    )
+		
+		
+		
+		
+])
+, color = "light")
+
+
+dist_card = dbc.Card(dbc.CardBody([
+        dbc.Row([dbc.Col(html.Span([html.H3('Income Distribution For Dane County', style = {"font-size":"18px"},id = 'inc'), html.H4('Median Household Income: ', )]), style = {"text-align":"center"})]),
+		dbc.Row([dbc.Col(html.H1("", id = "inc_text", style = {"text-align":"center"}))]),
+		
+ dcc.Graph(
+        id='distribution',
+        figure = generate_dist(value = 713)
+    )
+]), className = "mb-2"
+, color = "light")	
+
+
+tree_card = dbc.Card(dbc.CardBody([
+        dbc.Row([dbc.Col([html.H2(html.Strong("Educational Makeup of a County")),html.H4("How Educated is Dane County, Wisconsin?", id = "education") ])]), 
+		
+		
+		
+		dcc.Graph(
+        id='treemap',
+        figure=generate_treemap(713))
+    
+		
+		
+		
+		
+])
+, color = "light")		
+
+
+bar_card = dbc.Card(dbc.CardBody([
+        dbc.Row([dbc.Col([html.H2(html.Strong("Comparing Occupations for Dane County, WI"), id = "occup"),html.H4("How many men and women work in each occupation sector?") ])]), 
+		
+		
+		
+		dcc.Graph(
+        id='bar',
+        figure=generate_bar(713 )
+    )
+		
+		
+		
+		
+])
+, color = 'light')
+
+
+
+pie_card = dbc.Card(dbc.CardBody([
         dbc.Row([dbc.Col([html.H2(html.Strong("Nativity in the US")),html.H4("How many people have immigrated to Dane County, Wisconsin?", id = "nativ") ])]), 
 		
 		
@@ -1292,35 +1231,23 @@ ninth_card = dbc.Card(dbc.CardBody([
 , color = 'light')
 
 
-#
-#@app.callback(
-#    Output("choropleth", "figure"),
-#    [
-#        Input("dropdown-select", "value"),
-#      
-#    ],
-#)
-#def update_choro(dd_select):
-#    # Update choropleth when dropdown or date-picker change
-#    if dd_select is None:
-#        dd_select = "POVERTY_RATE"
-#
-#    return generate_dest_choro(dd_select)
 
 
-cards5 = dbc.Row(dbc.Col([html.H1(html.B("How Does Your County Compare? Comparing Counties across the US through Census Data"),style = {"font-size":"30px","top-margin":"10px", "color":"#333333", "text-align":"center"}),html.H3("Data from the 2018 American Community 5-year Survey",style = {"font-size":"20px","top-margin":"10px", "color":"#333333", "text-align":"center"}) ]), className = "mb-3", style = {"background-color":"#407D72","padding":"30px" })
-cards4 = dbc.Row([dbc.Col(tenth_card, width=12,style={"height": "100%"})], className = "mb-3")
-cards1 = dbc.Row([dbc.Col(first_card, width=8, style={"height": "100%"} ), dbc.Col(second_card, width=4,style={"height": "100%"})],className = "mb-3")
-cards2 = dbc.Row([dbc.Col(third_card, width=2), dbc.Col(fourth_card,width = 2),
-				  dbc.Col(fifth_card, width = 2), dbc.Col(sixth_card, width=6)], className = 'mb-3')
-cards3 = dbc.Row([dbc.Col(seventh_card, width = 4),dbc.Col(eighth_card, width= 4,style={"height": "100%"}),dbc.Col(ninth_card, width= 4)], className = 'mb-3')
+
+
+title_cards = dbc.Row(dbc.Col([html.H1(html.B("How Does Your County Compare? Comparing Counties across the US through Census Data"),style = {"font-size":"30px","top-margin":"10px", "color":"#333333", "text-align":"center"}),html.H3("Data from the 2018 American Community 5-year Survey",style = {"font-size":"20px","top-margin":"10px", "color":"#333333", "text-align":"center"}) ]), className = "mb-3", style = {"background-color":"#407D72","padding":"30px" })
+dropdown_cards = dbc.Row([dbc.Col(dropdown_card, width=12,style={"height": "100%"})], className = "mb-3")
+firstrow_cards = dbc.Row([dbc.Col(map_card, width=8, style={"height": "100%"} ), dbc.Col(scatter_card, width=4,style={"height": "100%"})],className = "mb-3")
+secondrow_cards= dbc.Row([dbc.Col(rentbox_card, width=2), dbc.Col(householdvalue_box_card,width = 2),
+				  dbc.Col(meantimeworkbox_card, width = 2), dbc.Col(dist_card, width=6)], className = 'mb-3')
+thirdrow_cards = dbc.Row([dbc.Col(tree_card, width = 4),dbc.Col(bar_card, width= 4,style={"height": "100%"}),dbc.Col(pie_card, width= 4)], className = 'mb-3')
 
 app.layout =dbc.Container( 
 	
 	
 	children =
 
-  [cards5, cards4, cards1, cards2, cards3] ,id = "content", className = "h-100", style = {"padding":"20px", "margin":"5px" }, fluid = True)
+  [title_cards, dropdown_cards, firstrow_cards, secondrow_cards, thirdrow_cards] ,id = "content", className = "h-100", style = {"padding":"20px", "margin":"5px" }, fluid = True)
 
 
 
@@ -1328,7 +1255,7 @@ app.layout =dbc.Container(
 
 @app.callback(
     Output("main-map", "figure"),
-    [Input("dropdown1", "value"), Input("scatter", "clickData")],
+    [Input("dropdown_map", "value"), Input("scatter", "clickData")],
 )
 
 def update_choro(dd_select, scatterclick):
@@ -1352,7 +1279,7 @@ def update_choro(dd_select, scatterclick):
 
 @app.callback(
 	Output("scatter", "figure"),
-	[Input("dropdown2", "value"),Input("dropdown1", "value"),Input("main-map", "clickData")  ]
+	[Input("dropdown_scatterx", "value"),Input("dropdown_map", "value"),Input("main-map", "clickData")  ]
 )
 
 def update_scatter(dd_select_x,dd_select_y, choroclick):
@@ -1365,7 +1292,7 @@ def update_scatter(dd_select_x,dd_select_y, choroclick):
 		value = []
 		for point in choroclick["points"]:
 			value.append(point["pointNumber"])
-			print(value[0])
+			
 			return generate_scatter(dd_select_x,dd_select_y,value[0])
 	else:
 		return generate_scatter(dd_select_x, dd_select_y,713)
@@ -1383,7 +1310,7 @@ def update_rent_text(choro_click):
 			
 				value.append(point["pointNumber"])
 				
-				return df_2.iloc[value[0]]["COUNTYNAME"]
+				return total_census_grouped.iloc[value[0]]["COUNTYNAME"]
 	
 		else:
 	
@@ -1400,13 +1327,13 @@ def update_rent(choro_click):
 			for point in choro_click["points"]:
 			
 				value.append(point["pointNumber"])
-				rent = df_2.iloc[value[0]]["MEDIAN_RENT"]
+				rent = total_census_grouped.iloc[value[0]]["MEDIAN_RENT"]
 			
 				return "$" + str(rent)
 	
 		else:
-			rent = df_2.iloc[713]["MEDIAN_RENT"]
-			print(rent)
+			rent = total_census_grouped.iloc[713]["MEDIAN_RENT"]
+			
 			return "$" + str(rent)
 	
 
@@ -1424,9 +1351,9 @@ def update_box1( choroclick):
 		value = []
 		for point in choroclick["points"]:
 			value.append(point["pointNumber"])
-			return generate_box1(value[0])
+			return generate_rentbox(value[0])
 	else:
-		return generate_box1(713)
+		return generate_rentbox(713)
 	
 	
 	
@@ -1444,7 +1371,7 @@ def update_house_text(choro_click):
 			
 				value.append(point["pointNumber"])
 				
-				return df_2.iloc[value[0]]["COUNTYNAME"]
+				return total_census_grouped.iloc[value[0]]["COUNTYNAME"]
 	
 		else:
 	
@@ -1462,12 +1389,12 @@ def update_house_price(choro_click):
 		for point in choro_click["points"]:
 
 			value.append(point["pointNumber"])
-			house_price = df_2.iloc[value[0]]["MEDIAN_HOUSEHOLD_VALUE"]
+			house_price = total_census_grouped.iloc[value[0]]["MEDIAN_HOUSEHOLD_VALUE"]
 
 			return "$" + str(house_price)
 
 	else:
-		house_price = df_2.iloc[713]["MEDIAN_HOUSEHOLD_VALUE"]
+		house_price = total_census_grouped.iloc[713]["MEDIAN_HOUSEHOLD_VALUE"]
 		
 		return "$" + str(house_price)
 
@@ -1490,9 +1417,9 @@ def update_box2( choroclick):
 		value = []
 		for point in choroclick["points"]:
 			value.append(point["pointNumber"])
-			return generate_box2(value[0])
+			return generate_householdvalue_box(value[0])
 	else:
-		return generate_box2(713)
+		return generate_householdvalue_box(713)
 	
 	
 
@@ -1509,7 +1436,7 @@ def update_commute_text(choro_click):
 			
 				value.append(point["pointNumber"])
 				
-				return df_2.iloc[value[0]]["COUNTYNAME"]
+				return total_census_grouped.iloc[value[0]]["COUNTYNAME"]
 	
 		else:
 	
@@ -1529,12 +1456,12 @@ def update_commute(choro_click):
 		for point in choro_click["points"]:
 
 			value.append(point["pointNumber"])
-			commute = round(float(df_2.iloc[value[0]]["MEAN_TIME_TO_WORK_MIN"]))
+			commute = round(float(total_census_grouped.iloc[value[0]]["MEAN_TIME_TO_WORK_MIN"]))
 			
 			return str(commute)
 
 	else:
-		commute = round(float(df_2.iloc[713]["MEAN_TIME_TO_WORK_MIN"]))
+		commute = round(float(total_census_grouped.iloc[713]["MEAN_TIME_TO_WORK_MIN"]))
 		
 		return  str(commute)
 
@@ -1555,9 +1482,9 @@ def update_box3(choroclick):
 		value = []
 		for point in choroclick["points"]:
 			value.append(point["pointNumber"])
-			return generate_box3(value[0])
+			return generate_meantimework_box(value[0])
 	else:
-		return generate_box3(713)
+		return generate_meantimework_box(713)
 	
 	
 @app.callback(
@@ -1572,7 +1499,7 @@ def update_dist_text(choro_click):
 			
 				value.append(point["pointNumber"])
 				
-				return "Income Distribution for " + df_2.iloc[value[0]]["COUNTYNAME"]
+				return "Income Distribution for " + total_census_grouped.iloc[value[0]]["COUNTYNAME"]
 	
 		else:
 	
@@ -1592,12 +1519,12 @@ def update_inc(choro_click):
 		for point in choro_click["points"]:
 
 			value.append(point["pointNumber"])
-			inc = round(float(df_2.iloc[value[0]]["MEDIAN_INCOME_DOLLARS"]))
+			inc = round(float(total_census_grouped.iloc[value[0]]["MEDIAN_INCOME_DOLLARS"]))
 			
 			return '$' + str(inc)
 
 	else:
-		inc = round(float(df_2.iloc[713]["MEDIAN_INCOME_DOLLARS"]))
+		inc = round(float(total_census_grouped.iloc[713]["MEDIAN_INCOME_DOLLARS"]))
 		
 		return  '$' + str(inc)
 
@@ -1633,8 +1560,8 @@ def update_education_text(choro_click):
 		for point in choro_click["points"]:
 
 			value.append(point["pointNumber"])
-			county = df_2.iloc[value[0]]["COUNTYNAME"]
-			state =  df_2.iloc[value[0]]["state"]
+			county = total_census_grouped.iloc[value[0]]["COUNTYNAME"]
+			state =  total_census_grouped.iloc[value[0]]["state"]
 			return "How educated is " + county + ', ' + state
 
 	else:
@@ -1652,8 +1579,8 @@ def update_occup_text(choro_click):
 		for point in choro_click["points"]:
 
 			value.append(point["pointNumber"])
-			county = df_2.iloc[value[0]]["COUNTYNAME"]
-			state =  df_2.iloc[value[0]]["state"]
+			county = total_census_grouped.iloc[value[0]]["COUNTYNAME"]
+			state =  total_census_grouped.iloc[value[0]]["state"]
 			return "Comparing Occupations for " + county + ', ' + state
 
 	else:
@@ -1672,8 +1599,8 @@ def update_occup_text(choro_click):
 		for point in choro_click["points"]:
 
 			value.append(point["pointNumber"])
-			county = df_2.iloc[value[0]]["COUNTYNAME"]
-			state =  df_2.iloc[value[0]]["state"]
+			county = total_census_grouped.iloc[value[0]]["COUNTYNAME"]
+			state =  total_census_grouped.iloc[value[0]]["state"]
 			return "How many people have immigrated to " + county + ', ' + state
 
 	else:
