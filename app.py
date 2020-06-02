@@ -30,7 +30,9 @@ token = os.getenv('TOKEN')
 
 # load data
 
-with urlopen('https://raw.githubusercontent.com/plotly/datasets/master/geojson-counties-fips.json') as response:
+with urlopen(
+    'https://raw.githubusercontent.com/plotly/datasets/master/geojson-counties-fips.json'
+) as response:
     counties = json.load(response)
 
 total_census_grouped = pd.read_csv(DATA_PATH.joinpath(
@@ -277,10 +279,12 @@ def update_tooltip(dd_select, value):
         return "<b>%{text}</b><br>Used Public Transit for Commute: %{" + value + ":.1f}%"
 
     elif dd_select == "MEAN_TIME_TO_WORK_MIN":
-        return "<b>%{text}</b><br>Mean Time to Work (Min): %{" + value + ":.1f}"
+        return "<b>%{text}</b><br>Mean Time to Work (Min): %{" + \
+            value + ":.1f}"
 
     elif dd_select == "EDUCATION_LESS_9TH":
-        return "<b>%{text}</b><br>Education Less than 9th: %{" + value + ":.0f}%"
+        return "<b>%{text}</b><br>Education Less than 9th: %{" + \
+            value + ":.0f}%"
 
     elif dd_select == "EDUCATION_NO_DIPLOMA":
         return "<b>%{text}</b><br>Education No Diploma: %{" + value + ":.0f}%"
@@ -307,7 +311,8 @@ def update_tooltip(dd_select, value):
         return "<b>%{text}</b><br>Management, Business, Science, or Arts Occupations Women: %{" + value + ":.1f}%"
 
     elif dd_select == "MALE_SERVICE":
-        return "<b>%{text}</b><br>Service Occupations Men: %{" + value + ":.1f}%"
+        return "<b>%{text}</b><br>Service Occupations Men: %{" + \
+            value + ":.1f}%"
 
     elif dd_select == "FEMALE_SERVICE":
         return "<b>%{text}</b><br>Service Occupations Women: %{" + value + ":.1f}%"
@@ -319,7 +324,7 @@ def update_tooltip(dd_select, value):
         return "<b>%{text}</b><br>Construction or Natural Resources Occupations Women: %{" + value + ":.1f}%"
 
     elif dd_select == "MALE_PRODUCTION_TRANSPORTATION_MATERIAL":
-        return "<b>%{text}</b><br>Production, Transportation  Occupations Men: %{" + value + ":.1f}%"
+        return r"<b>%{text}</b><br>Production, Transportation  Occupations Men: \ %{" + value + ":.1f}%"
 
     elif dd_select == "FEMALE_PRODUCTION_TRANSPORTATION_MATERIAL":
         return "<b>%{text}</b><br>Production, Transportation Occupations Women: %{" + value + ":.1f}%"
@@ -440,7 +445,6 @@ def generate_choro(dd_select, value=None):
         ]
 
         layout = dict(
-
             autosize=True,
             margin=go.layout.Margin(
                 l=0,
@@ -448,18 +452,23 @@ def generate_choro(dd_select, value=None):
                 b=0,
                 t=0,
                 pad=0,
-                autoexpand=True
-            ),
-
+                autoexpand=True),
             automargin=False,
             clickmode="event+select",
             hovermode='closest',
-            hoverlabel=dict(bgcolor="#CED2CC"),
-            mapbox={'accesstoken': token, 'style': "light", 'autosize': True, 'marker': dict(
-                size=20,
-
-            ), 'center': dict(lon=center_long, lat=center_lat), 'zoom': 3}
-        )
+            hoverlabel=dict(
+                bgcolor="#CED2CC"),
+            mapbox={
+                'accesstoken': token,
+                'style': "light",
+                'autosize': True,
+                'marker': dict(
+                    size=20,
+                ),
+                'center': dict(
+                    lon=center_long,
+                    lat=center_lat),
+                'zoom': 3})
 
         return {"data": map_data, "layout": layout}
 
@@ -679,109 +688,106 @@ def generate_dist(value):
     """creates histogram of percent of population in each income bin"""
 
     dist_county = total_census_grouped.iloc[value]
-    dist_data = [
-
-        {
-            'x': ['<$10K'],
-            'y': [dist_county["INCOME_LESS_10000"]],
-            "name": "",
-            'type': 'bar',
-            'marker': {"color": "#407D72", "opacity": "1", "line": {"width": "1", "color": "black"}},
-
-            'hovertemplate': "<b>%{y}</b> of people make %{x}",
-
-        },
-
-        {
-            'x': ['$10-15K'],
-            'y': [dist_county["INCOME_10000_14999"]],
-            "name": "",
-            'type': 'bar',
-            'marker': {"color": "#407D72", "opacity": "1", "line": {"width": "1", "color": "black"}},
-            'hovertemplate': "<b>%{y}</b> of people make %{x}",
-
-        },
-
-        {
-            'x': ['$15-25K'],
-            'y': [dist_county["INCOME_15000_24999"]],
-            "name": "",
-            'type': 'bar',
-            'marker': {"color": "#407D72", "opacity": "1", "line": {"width": "1", "color": "black"}},
-            'hovertemplate': "<b>%{y}</b> of people make %{x}",
-
-        },
-
-        {
-            'x': ['$25-35K'],
-            'y': [dist_county["INCOME_25000_34999"]],
-            "name": "",
-            'type': 'bar',
-            'marker': {"color": "#407D72", "opacity": "1", "line": {"width": "1", "color": "black"}},
-            'hovertemplate': "<b>%{y}</b> of people make %{x}",
-
-        },
-
-        {
-            'x': ['$35-50K'],
-            'y': [dist_county["INCOME_35000_49999"]],
-            "name": "",
-            'type': 'bar',
-            'marker': {"color": "#407D72", "opacity": "1", "line": {"width": "1", "color": "black"}},
-            'hovertemplate': "<b>%{y}</b> of people make %{x}",
-
-        },
-
-        {
-            'x': ['$50-75K'],
-            'y': [dist_county["INCOME_50000_74999"]],
-            "name": "",
-            'type': 'bar',
-            'marker': {"color": "#407D72", "opacity": "1", "line": {"width": "1", "color": "black"}},
-            'hovertemplate': "<b>%{y}</b> of people make %{x}",
-        },
-
-        {
-            'x': ['$75-100K'],
-            'y': [dist_county["INCOME_75000_99999"]],
-            "name": "",
-            'type': 'bar',
-            'marker': {"color": "#407D72", "opacity": "1", "line": {"width": "1", "color": "black"}},
-            'hovertemplate': "<b>%{y}</b> of people make %{x}",
-
-        },
-
-        {
-            'x': ['$100 - 150K'],
-            'y': [dist_county["INCOME_100000_149999"]],
-
-            'type': 'bar',
-            'marker': {"color": "#407D72", "opacity": "1", "line": {"width": "1", "color": "black"}},
-            'hovertemplate': "<b>%{y}</b> of people make %{x}",
-
-        },
-
-        {
-            'x': ['$150-200K'],
-            'y': [dist_county["INCOME_150000_199999"]],
-            "name": "",
-            'type': 'bar',
-            'marker': {"color": "#407D72", "opacity": "1", "line": {"width": "1", "color": "black"}},
-            'hovertemplate': "<b>%{y}</b> of people make %{x}",
-
-        },
-
-        {
-            'x': ['> $200K'],
-            'y': [dist_county["INCOME_200000"]],
-            "name": "",
-            'type': 'bar',
-            'marker': {"color": "#407D72", "opacity": "1", "line": {"width": "1", "color": "black"}},
-            'hovertemplate': "<b>%{y}</b> of people make %{x}",
-
-        },
-
-    ]
+    dist_data = [{'x': ['<$10K'],
+                  'y': [dist_county["INCOME_LESS_10000"]],
+                  "name": "",
+                  'type': 'bar',
+                  'marker': {"color": "#407D72",
+                             "opacity": "1",
+                             "line": {"width": "1",
+                                      "color": "black"}},
+                  'hovertemplate': "<b>%{y}</b> of people make %{x}",
+                  },
+                 {'x': ['$10-15K'],
+                  'y': [dist_county["INCOME_10000_14999"]],
+                  "name": "",
+                  'type': 'bar',
+                  'marker': {"color": "#407D72",
+                             "opacity": "1",
+                             "line": {"width": "1",
+                                      "color": "black"}},
+                  'hovertemplate': "<b>%{y}</b> of people make %{x}",
+                  },
+                 {'x': ['$15-25K'],
+                  'y': [dist_county["INCOME_15000_24999"]],
+                  "name": "",
+                  'type': 'bar',
+                  'marker': {"color": "#407D72",
+                             "opacity": "1",
+                             "line": {"width": "1",
+                                      "color": "black"}},
+                  'hovertemplate': "<b>%{y}</b> of people make %{x}",
+                  },
+                 {'x': ['$25-35K'],
+                  'y': [dist_county["INCOME_25000_34999"]],
+                  "name": "",
+                  'type': 'bar',
+                  'marker': {"color": "#407D72",
+                             "opacity": "1",
+                             "line": {"width": "1",
+                                      "color": "black"}},
+                  'hovertemplate': "<b>%{y}</b> of people make %{x}",
+                  },
+                 {'x': ['$35-50K'],
+                  'y': [dist_county["INCOME_35000_49999"]],
+                  "name": "",
+                  'type': 'bar',
+                  'marker': {"color": "#407D72",
+                             "opacity": "1",
+                             "line": {"width": "1",
+                                      "color": "black"}},
+                  'hovertemplate': "<b>%{y}</b> of people make %{x}",
+                  },
+                 {'x': ['$50-75K'],
+                  'y': [dist_county["INCOME_50000_74999"]],
+                  "name": "",
+                  'type': 'bar',
+                  'marker': {"color": "#407D72",
+                             "opacity": "1",
+                             "line": {"width": "1",
+                                      "color": "black"}},
+                  'hovertemplate': "<b>%{y}</b> of people make %{x}",
+                  },
+                 {'x': ['$75-100K'],
+                  'y': [dist_county["INCOME_75000_99999"]],
+                  "name": "",
+                  'type': 'bar',
+                  'marker': {"color": "#407D72",
+                             "opacity": "1",
+                             "line": {"width": "1",
+                                      "color": "black"}},
+                  'hovertemplate': "<b>%{y}</b> of people make %{x}",
+                  },
+                 {'x': ['$100 - 150K'],
+                  'y': [dist_county["INCOME_100000_149999"]],
+                  'type': 'bar',
+                  'marker': {"color": "#407D72",
+                             "opacity": "1",
+                             "line": {"width": "1",
+                                      "color": "black"}},
+                  'hovertemplate': "<b>%{y}</b> of people make %{x}",
+                  },
+                 {'x': ['$150-200K'],
+                  'y': [dist_county["INCOME_150000_199999"]],
+                  "name": "",
+                  'type': 'bar',
+                  'marker': {"color": "#407D72",
+                             "opacity": "1",
+                             "line": {"width": "1",
+                                      "color": "black"}},
+                  'hovertemplate': "<b>%{y}</b> of people make %{x}",
+                  },
+                 {'x': ['> $200K'],
+                  'y': [dist_county["INCOME_200000"]],
+                  "name": "",
+                  'type': 'bar',
+                  'marker': {"color": "#407D72",
+                             "opacity": "1",
+                             "line": {"width": "1",
+                                      "color": "black"}},
+                  'hovertemplate': "<b>%{y}</b> of people make %{x}",
+                  },
+                 ]
     layout = go.Layout(
         showlegend=False,
         bargap=.03,
@@ -817,24 +823,36 @@ def generate_treemap(value):
     tree_data = [
         go.Treemap(
             name="",
-            labels=df_ed_county['EDUCATION_LEVEL'].replace({'EDUCATION_BACHELORS': 'Bachelors', 'EDUCATION_GRADUATE': 'Graduate',
-                                                            'EDUCATION_HIGHSCHOOL': 'Highschool Diploma',
-                                                            'EDUCATION_SOME_COLLEGE': 'Some College', 'EDUCATION_ASSOCIATES': 'Associates',
-                                                            'EDUCATION_NO_DIPLOMA': 'Highschool No Diploma', 'EDUCATION_LESS_9TH': 'Finished less than 9th'}),
-
-            parents=[""]*len(df_ed_county['EDUCATION_LEVEL'].unique()),
+            labels=df_ed_county['EDUCATION_LEVEL'].replace(
+                {
+                    'EDUCATION_BACHELORS': 'Bachelors',
+                    'EDUCATION_GRADUATE': 'Graduate',
+                    'EDUCATION_HIGHSCHOOL': 'Highschool Diploma',
+                    'EDUCATION_SOME_COLLEGE': 'Some College',
+                    'EDUCATION_ASSOCIATES': 'Associates',
+                    'EDUCATION_NO_DIPLOMA': 'Highschool No Diploma',
+                    'EDUCATION_LESS_9TH': 'Finished less than 9th'}),
+            parents=[""] * len(
+                df_ed_county['EDUCATION_LEVEL'].unique()),
             values=df_ed_county['PERCENT TOTAL'],
-            marker=dict(colors=["#f5874c", "#407D72", "#B1836A", "#6AB187", "#B16A7F", "#CED2CC", '#1F3F49'], line=dict(width=1, color="black")
-
-                        ),
-            textfont=dict(size=14),
+            marker=dict(
+                colors=[
+                    "#f5874c",
+                    "#407D72",
+                    "#B1836A",
+                    "#6AB187",
+                    "#B16A7F",
+                    "#CED2CC",
+                    '#1F3F49'],
+                line=dict(
+                    width=1,
+                    color="black")),
+            textfont=dict(
+                size=14),
             textinfo='label+percent entry',
             texttemplate="%{label}<br><b>%{value:.0f}%</b>",
             hovertemplate="%{label}<br><b>%{value:.0f}%</b>",
-        )
-
-
-    ]
+        )]
     layout = go.Layout(
         #uniformtext=dict(minsize=100, mode='show')
 
@@ -1005,9 +1023,16 @@ def generate_bar(value):
     )
 
     bar_data = [
-        trace0, trace1, trace2, trace3, trace4, trace5, trace6, trace7, trace8, trace9
-
-    ]
+        trace0,
+        trace1,
+        trace2,
+        trace3,
+        trace4,
+        trace5,
+        trace6,
+        trace7,
+        trace8,
+        trace9]
     layout = go.Layout(
         hovermode="closest",
         hoverlabel=dict(bgcolor="#CED2CC"),
@@ -1203,8 +1228,13 @@ firstrow_cards = dbc.Row(
     [dbc.Col(map_card, width=8, style={"height": "100%"}), dbc.Col(
         scatter_card, width=4, style={"height": "100%"})],
     className="mb-3")
-secondrow_cards = dbc.Row([dbc.Col(rentbox_card, width=2), dbc.Col(householdvalue_box_card, width=2),
-                           dbc.Col(meantimeworkbox_card, width=2), dbc.Col(dist_card, width=6)], className='mb-3')
+secondrow_cards = dbc.Row(
+    [
+        dbc.Col(
+            rentbox_card, width=2), dbc.Col(
+                householdvalue_box_card, width=2), dbc.Col(
+                    meantimeworkbox_card, width=2), dbc.Col(
+                        dist_card, width=6)], className='mb-3')
 thirdrow_cards = dbc.Row(
     [dbc.Col(tree_card, width=4), dbc.Col(bar_card, width=4, style={
         "height": "100%"}), dbc.Col(pie_card, width=4)],
@@ -1213,9 +1243,18 @@ thirdrow_cards = dbc.Row(
 # actually create the layout
 
 app.layout = dbc.Container(
-
-    children=[title_cards, dropdown_cards, firstrow_cards, secondrow_cards, thirdrow_cards], id="content", className="h-100",
-    style={"padding": "20px", "margin": "5px"}, fluid=True)
+    children=[
+        title_cards,
+        dropdown_cards,
+        firstrow_cards,
+        secondrow_cards,
+        thirdrow_cards],
+    id="content",
+    className="h-100",
+    style={
+        "padding": "20px",
+        "margin": "5px"},
+    fluid=True)
 
 
 # The callbacks!! Updating each chart
@@ -1440,7 +1479,8 @@ def update_dist_text(choro_click):
         for point in choro_click["points"]:
             value.append(point["pointNumber"])
 
-            return "Income Distribution for " + total_census_grouped.iloc[value[0]]["COUNTYNAME"]
+            return "Income Distribution for " + \
+                total_census_grouped.iloc[value[0]]["COUNTYNAME"]
 
     else:
 
