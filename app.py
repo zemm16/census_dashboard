@@ -13,6 +13,7 @@ from dash.exceptions import PreventUpdate
 import numpy as np
 import json
 
+
 stylesheets = ['bootstrap.min.css']
 
 external_stylesheets = [
@@ -534,7 +535,7 @@ def generate_scatter(dd_select_x, dd_select_y, value, ):
 
 def generate_rentbox(value):
     """generates a boxplot showing median rent values throughout the US"""
-    if value is None:
+    if not value:
         selected_points = []
     selected_points = [value]
     box_data = [
@@ -1266,7 +1267,7 @@ app.layout = dbc.Container(
 def update_choro(dd_select, scatterclick):
     """update the map if someone clicks on a county in the scatter plot"""
 
-    if scatterclick is not None:
+    if scatterclick:
         value = []
         pointnumbers = []
         for point in scatterclick["points"]:
@@ -1285,11 +1286,11 @@ def update_choro(dd_select, scatterclick):
 )
 def update_scatter(dd_select_x, dd_select_y, choroclick):
     """Highlight county on scatter if clicked on the map"""
-    if dd_select_y is None:
+    if not dd_select_y:
         dd_select_y = "UNEMPL_RATE"
-    if dd_select_x is None:
+    if not dd_select_x:
         dd_select_x = "POVERTY_RATE"
-    if choroclick is not None:
+    if choroclick:
         value = []
         for point in choroclick["points"]:
             value.append(point["pointNumber"])
@@ -1306,7 +1307,7 @@ def update_scatter(dd_select_x, dd_select_y, choroclick):
 )
 def update_rent_text(choro_click):
     """Update what county has been clicked on in the text above the rent box plot"""
-    if choro_click is not None:
+    if choro_click:
         value = []
         for point in choro_click["points"]:
             value.append(point["pointNumber"])
@@ -1324,7 +1325,7 @@ def update_rent_text(choro_click):
 )
 def update_rent(choro_click):
     """update the value in text above rent box plot based on what has been clicked on in the map"""
-    if choro_click is not None:
+    if choro_click:
         value = []
         for point in choro_click["points"]:
             value.append(point["pointNumber"])
@@ -1345,7 +1346,7 @@ def update_rent(choro_click):
 def update_rentbox(choroclick):
     """update rent box plot highlighted value based on what county was clicked on in the map"""
 
-    if choroclick is not None:
+    if choroclick:
         value = []
         for point in choroclick["points"]:
             value.append(point["pointNumber"])
@@ -1361,7 +1362,7 @@ def update_rentbox(choroclick):
 )
 def update_house_text(choro_click):
     """Update text above household value boxplot based on what county was clicked on in the map"""
-    if choro_click is not None:
+    if choro_click:
         value = []
         for point in choro_click["points"]:
             value.append(point["pointNumber"])
@@ -1379,7 +1380,7 @@ def update_house_text(choro_click):
 )
 def update_house_price(choro_click):
     """Update text above household value boxplot based on what county was clicked on in the map"""
-    if choro_click is not None:
+    if choro_click:
         value = []
         for point in choro_click["points"]:
             value.append(point["pointNumber"])
@@ -1401,7 +1402,7 @@ def update_house_price(choro_click):
 def update_householdvaluebox(choroclick):
     """update household value highlighed in boxplot based on what county was clicked on in map"""
 
-    if choroclick is not None:
+    if choroclick:
         value = []
         for point in choroclick["points"]:
             value.append(point["pointNumber"])
@@ -1417,7 +1418,7 @@ def update_householdvaluebox(choroclick):
 )
 def update_commute_text(choro_click):
     """update text above commute boxplot based on what county was clicked on in map"""
-    if choro_click is not None:
+    if choro_click:
         value = []
         for point in choro_click["points"]:
             value.append(point["pointNumber"])
@@ -1435,7 +1436,7 @@ def update_commute_text(choro_click):
 )
 def update_commute(choro_click):
     """update text above commute boxplot on what county was clicked on in map"""
-    if choro_click is not None:
+    if choro_click:
         value = []
         for point in choro_click["points"]:
             value.append(point["pointNumber"])
@@ -1458,7 +1459,7 @@ def update_commute(choro_click):
 def update_commutebox(choroclick):
     """update commute values highlighted in boxplot based on what county was clicked on in map"""
 
-    if choroclick is not None:
+    if choroclick:
         value = []
         for point in choroclick["points"]:
             value.append(point["pointNumber"])
@@ -1474,7 +1475,7 @@ def update_commutebox(choroclick):
 )
 def update_dist_text(choro_click):
     """update text above histogram based on what county was clicked on in map"""
-    if choro_click is not None:
+    if choro_click:
         value = []
         for point in choro_click["points"]:
             value.append(point["pointNumber"])
@@ -1493,7 +1494,7 @@ def update_dist_text(choro_click):
 )
 def update_inc(choro_click):
     """update income info in text above histogram based on what county was clicked on in map"""
-    if choro_click is not None:
+    if choro_click:
         value = []
         for point in choro_click["points"]:
             value.append(point["pointNumber"])
@@ -1515,7 +1516,7 @@ def update_inc(choro_click):
 )
 def update_dist(choroclick):
     """update histogram based on what on what county was clicked on in map """
-    if choroclick is not None:
+    if choroclick:
         value = []
         for point in choroclick["points"]:
             value.append(point["pointNumber"])
@@ -1533,7 +1534,7 @@ def update_dist(choroclick):
 )
 def update_education_text(choro_click):
     """update text above treemap based on what county was clicked on in map"""
-    if choro_click is not None:
+    if choro_click:
         value = []
         for point in choro_click["points"]:
             value.append(point["pointNumber"])
@@ -1552,7 +1553,7 @@ def update_education_text(choro_click):
 )
 def update_occup_text(choro_click):
     """update text above occupation based on what county was clicked on in map"""
-    if choro_click is not None:
+    if choro_click:
         value = []
         for point in choro_click["points"]:
             value.append(point["pointNumber"])
@@ -1571,7 +1572,7 @@ def update_occup_text(choro_click):
 )
 def update_occup_text(choro_click):
     """update text above pie chart based on what county was clicked on in map"""
-    if choro_click is not None:
+    if choro_click:
         value = []
         for point in choro_click["points"]:
             value.append(point["pointNumber"])
@@ -1590,7 +1591,7 @@ def update_occup_text(choro_click):
 )
 def update_treemap(choroclick):
     """update treemap based on what county was clicked on in map"""
-    if choroclick is not None:
+    if choroclick:
         value = []
         for point in choroclick["points"]:
             value.append(point["pointNumber"])
@@ -1608,7 +1609,7 @@ def update_treemap(choroclick):
 )
 def update_bar(choro_click):
     """update barchart based on what county was clicked on in map"""
-    if choro_click is not None:
+    if choro_click:
         value = []
         for point in choro_click["points"]:
             value.append(point["pointNumber"])
@@ -1627,7 +1628,7 @@ def update_bar(choro_click):
 )
 def update_pie(choro_click):
     """update piechart based on what county was clicked on in map"""
-    if choro_click is not None:
+    if choro_click:
         value = []
         for point in choro_click["points"]:
             value.append(point["pointNumber"])
